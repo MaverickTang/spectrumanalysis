@@ -1,0 +1,102 @@
+clear all;
+load("spectrumData");
+% Assuming spectrumData is a 1500x23901 matrix
+
+% Initialize matrices to store expectation and sigma values
+expectation = zeros(1, size(spectrumData, 2));
+sigma = zeros(1, size(spectrumData, 2));
+
+% Calculate expectation (mean) and sigma (standard deviation) for each column
+for i = 1:size(spectrumData, 2)
+    expectation(i) = mean(spectrumData(:, i));
+    sigma(i) = std(spectrumData(:, i));
+end
+% expectation now contains the mean of each frequency point across all time samples
+% sigma now contains the standard deviation of each frequency point across all time samples
+startFreq = 20e6; % 20 MHz in Hz
+endFreq = 6e9;    % 6 GHz in Hz
+stepFreq = 25e3;  % 25 kHz in Hz
+frequencies = startFreq:stepFreq:endFreq;
+numFrequencies = length(frequencies);
+frequenciesPerPiece = numFrequencies / 100;
+% figure;
+% plot(frequencies, spectrumData(1,:));
+% hold on;
+% plot(frequencies,expectation+3*sigma);
+% hold off;
+
+threbynormal = expectation+3*sigma;
+
+%% Determine the detection rate
+load("anomalyData.mat");
+k=68400;
+
+asm=0;
+    for x = 1:size(anomalyData, 1)
+       count=0;
+        for y=1:size(anomalyData,2)
+            if anomalyData(x, y) > threbynormal(x)
+                count = count + 1; % Mark as true if it's an anomaly
+            end
+        end
+        % detectednumber=sum(anomalies(x,:));
+        if count>k
+            asm=asm+1;
+        end
+    end
+   fprintf("Correct rate: %d/1500\n",asm);
+   fprintf("Threshold k=%d\n",k);
+   
+
+
+% for i=k:-1:1
+%     asm=0;
+%     for x = 1:size(anomalyData, 1)
+%        count=0;
+%         for y=1:size(anomalyData,2)
+%             if anomalyData(x, y) > threbynormal(x)
+%                 count = count + 1; % Mark as true if it's an anomaly
+%             end
+%         end
+%         % detectednumber=sum(anomalies(x,:));
+%         if count>k
+%             asm=asm+1;
+%         end
+%     end
+%     if asm>=1200
+%         fprintf("Correct rate: %d/1500\n",asm);
+%         fprintf("Threshold k=%d",i);
+%         break
+%     end
+%     fprintf("%d\n",i);
+% end
+
+% Assuming threbynormal is a 1x239201 vector and anomalyData is a 1500x239201 matrix
+
+% Generate an index for the x-axis
+xIndex = 1:length(threbynormal); % Adjust this if you have a specific frequency or time vector
+
+% Plot the first row of anomalyData
+% figure;
+% plot(xIndex, anomalyData(1, :));
+% hold on;
+% 
+% % Overlay the threbynormal vector
+% plot(xIndex, threbynormal, 'LineWidth', 2);
+% 
+% % Find points where anomalyData exceeds threbynormal
+% exceedIndices = find(anomalyData(1, :) > threbynormal);
+% 
+% % Highlight these points
+% plot(xIndex(exceedIndices), anomalyData(1, exceedIndices), 'r*', 'MarkerSize', 5);
+% 
+% % Add title and labels
+% title('Anomaly Data and Threshold with Exceedances Highlighted');
+% xlabel('Index');
+% ylabel('Intensity');
+% legend('Anomaly Data', 'Threshold', 'Exceedances');
+% hold off;
+
+
+
+

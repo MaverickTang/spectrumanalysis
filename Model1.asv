@@ -1,0 +1,27 @@
+clear all;
+folder = '/Users/mt/Desktop/PROGRAM/mathmodelingcontest/data_json'; % Change this to your folder path
+% Get a list of all JSON files in the folder
+files = dir(fullfile(folder, '*.json'))
+% Check the total number of files
+numFiles = length(files)/2;
+% Define frequency range
+startFreq = 20e6; % 20 MHz in Hz
+endFreq = 6e9;    % 6 GHz in Hz
+stepFreq = 25e3;  % 25 kHz in Hz
+% Generate frequency vector
+frequencies = startFreq:stepFreq:endFreq;
+% Read the first file to determine the number of frequency points
+firstFile = jsondecode(fileread(fullfile(folder, files(1).name)));
+numFrequencies = length(firstFile.data);
+
+% Initialize the matrix to hold the spectrum data
+spectrumData = zeros(numFiles, numFrequencies);
+% Loop through the files and populate the matrix
+for k = 1:30:numFiles
+    fprintf('Processed file: %s\n',  files(k).name);
+    filename = fullfile(folder, files(k).name);
+    jsonData = jsondecode(fileread(filename));
+    % Assuming jsonData.data contains the frequency data for this time sample
+    spectrumData(k, :) = jsonData.data;
+end
+spectrumData

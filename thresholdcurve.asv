@@ -1,0 +1,48 @@
+clear all;
+load('spectrumData.mat', 'spectrumData');
+% Generate frequency vector (assuming it's already defined in your workspace)
+startFreq = 20e6; % 20 MHz in Hz
+endFreq = 6e9;    % 6 GHz in Hz
+stepFreq = 25e3;  % 25 kHz in Hz
+frequencies = startFreq:stepFreq:endFreq;
+
+% Calculate the noise floor as the median across all time samples for each frequency
+noiseFloor = median(spectrumData, 1);
+
+% Calculate the median absolute deviation (MAD) as a robust measure of variability
+madIntensity = mad(spectrumData, 1, 1);
+
+% Define the threshold as some multiple above the noise floor
+multiplier = 3;  % This can be adjusted based on the desired sensitivity
+threshold = noiseFloor - (multiplier * madIntensity);
+
+% Apply a smoothing algorithm to the threshold to prevent abrupt changes
+% The 'rloess' or 'loess' method can be used for local regression smoothing
+smoothedThreshold = smooth(threshold, 'loess');
+
+% Plot the frequency data for a single time point, and the threshold curve
+% Select a time point, e.g., the first time point
+selectedTimePoint = 1; % You can change this index to select a different time point
+
+% Plot the intensity data for the selected time point
+figure;
+plot(frequencies, spectrumData(selectedTimePoint, :));
+hold on;
+% Overlay the smoothed threshold curve
+plot(frequencies, smoothedThreshold, 'r-', 'LineWidth', 2);
+
+% Adjust the y-axis direction if necessary
+set(gca, 'YDir','reverse');
+
+% Set plot labels and title
+xlabel('Frequency (Hz)');
+ylabel('Intensity');
+title('Frequency Intensity and Smoothed Threshold');
+legend('Intensity Data', 'Smoothed Threshold');
+
+% Ensure the plot is visually comprehensible
+xlim([frequencies(1), frequencies(end)]);
+ylim([min(spectrumData(selectedTimePoint, :)), 0]); % Adjust as needed
+
+grid on;
+hold off;

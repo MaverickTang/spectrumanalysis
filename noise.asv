@@ -1,0 +1,136 @@
+% 载入原始数据
+% load('spectrumData.mat'); % 确保 spectrumData 变量现在在工作区中
+load('subspectrumData2.mat');
+% 数据参数
+numTimeSamples = 6300; % 时间点数
+% numFrequencyBands = 239201; % 频率点数
+frequenciesPerPiece = length(frequencies) / 100;
+startFreq = 20e6; % 起始频率 20 MHz
+endFreq = 6e9; % 结束频率 6 GHz
+stepFreq = 25e3; % 步长 25 kHz
+frequencies = startFreq:stepFreq:endFreq; % 频率数组
+chosenPiece = 5;  % for example, the 50th piece
+startIndex = round((chosenPiece - 1) * frequenciesPerPiece + 1);
+endIndex = round(chosenPiece * frequenciesPerPiece);
+numFrequencyBands = endIndex -startIndex + 1; % 频率点数
+pieceFrequencies = frequencies(startIndex:endIndex);
+
+% 设置异常比例
+ratioanomalies = 0.05;
+
+% 创建包含异常的数据副本
+% anomalyData = spectrumData;
+anomalyData = subspectrumData(:,5);
+% 对于每个时间点引入异常
+% 加性异常
+numAdditiveAnomalies = 63; 
+additiveFrequencies1 = randi([1, numTimeSamples], numAdditiveAnomalies, 1);
+additiveFrequencies2 = randi([1, numTimeSamples], numAdditiveAnomalies, 1);
+additiveAnomalyMagnitude = 150*rand(63);
+weirdadditiveAnomalyMagnitude = 150 + 400*rand(63);
+for j=1:63
+    anomalyData(additiveFrequencies1(j)) = anomalyData(additiveFrequencies1(j)) + additiveAnomalyMagnitude(j);
+    anomalyData(additiveFrequencies2(j)) = anomalyData(additiveFrequencies2(j)) + weirdadditiveAnomalyMagnitude(j);
+end
+% 新息异常
+numInnovativeAnomalies = 63; % 新息异常的数量
+innovativeFrequencies1 = randi([1, numFrequencyBands], numInnovativeAnomalies, 1);
+innovativeFrequencies2 = randi([1, numFrequencyBands], numInnovativeAnomalies, 1);
+innovativeAnomalyMagnitude = 150*rand(63); % 新息异常的幅度
+weirdinnovativeAnomalyMagnitude=150 + 400*rand(63);
+for j=1:numInnovativeAnomalies
+    for k=1:50
+        if innovativeFrequencies1(j)+k<numFrequencyBands && innovativeFrequencies2(j)+k<numFrequencyBands
+            anomalyData(innovativeFrequencies1(j)+k) = anomalyData(innovativeFrequencies1(j)+k)+innovativeAnomalyMagnitude(k);
+            anomalyData(innovativeFrequencies2(j)+k) = anomalyData(innovativeFrequencies2(j)+k)+weirdinnovativeAnomalyMagnitude(k);
+        end
+    end
+end
+
+
+figure;
+subplot(1,2,1);
+plot(1:6300, subspectrumData(:, 5)); % 转换为分贝
+title('正常数据');
+xlabel('频率(Hz)');
+ylabel('信号强度(dB)');
+% 
+subplot(1,2,2);
+plot(1:6300, anomalyData(:, 5)); % 转换为分贝
+title('包含异常的数据');
+xlabel('频率(Hz)');
+ylabel('信号强度(dB)');
+
+
+
+
+
+
+%     additiveAnomalyMagnitude = 150*rand();
+%     weirdadditiveAnomalyMagnitude = 150 + 400*rand();
+%     innovativeAnomalyMagnitude = 150*rand(50); % 新息异常的幅度
+%     weirdinnovativeAnomalyMagnitude=150 + 400*rand(50);
+% 
+% 
+% 
+% end
+% 
+% 
+% 
+% 
+% for j = 1:numTimeSamples
+%     % 引入加性异常
+%     numAdditiveAnomalies = round(ratioanomalies * numFrequencyBands/2); % 加性异常的数量
+%     additiveFrequencies = randi([1, numFrequencyBands], numAdditiveAnomalies, 1);
+%     additiveAnomalyMagnitude = 150*rand();
+%     % 200; % 加性异常的幅度
+%     weirdadditiveAnomalyMagnitude = 150 + 400*rand();
+% 
+%     % 生成新息异常
+%     numInnovativeAnomalies = round(ratioanomalies * numFrequencyBands / 2); % 新息异常的数量
+%     innovativeFrequencies = randi([1, numFrequencyBands], numInnovativeAnomalies, 1);
+%     innovativeAnomalyMagnitude = 150*rand(50); % 新息异常的幅度
+%     weirdinnovativeAnomalyMagnitude=150 + 400*rand(50);
+% 
+%     % 应用加性异常
+%     for i = 1:numAdditiveAnomalies
+%         if mod(rand(),2)
+%             anomalyData(j, additiveFrequencies(i)) = anomalyData(j, additiveFrequencies(i)) + additiveAnomalyMagnitude;
+%         else
+%             anomalyData(j, additiveFrequencies(i)) = anomalyData(j, additiveFrequencies(i)) + weirdadditiveAnomalyMagnitude;
+%         end
+%     end
+%     decidedd=rand();
+%     % 应用新息异常
+%     if mod(j,50)==1
+%         for i = 1:numInnovativeAnomalies
+%             for k=1:50
+%                 if j+k<numTimeSamples
+%                     if mod(decidedd,2)==1
+%                         anomalyData(j+k, innovativeFrequencies(i)) = anomalyData(j+k, innovativeFrequencies(i))+innovativeAnomalyMagnitude(k);
+%                     else
+%                         anomalyData(j+k, innovativeFrequencies(i)) = anomalyData(j+k, innovativeFrequencies(i))+weirdinnovativeAnomalyMagnitude(k);
+%                     end
+%                 end
+%             end
+%         end
+%     end
+% end
+
+% 保存包含异常的数据
+save("anomalyData.mat", "anomalyData","-v7.3");
+
+% 绘制某一个特定时间点的正常数据和包含异常的数据对比图
+% timePointToPlot = 436; % 选择一个特定的时间点来展示
+% figure;
+% subplot(1,2,1);
+% plot(frequencies, spectrumData(timePointToPlot, :)); % 转换为分贝
+% title('正常数据');
+% xlabel('频率(Hz)');
+% ylabel('信号强度(dB)');
+% 
+% subplot(1,2,2);
+% plot(frequencies, anomalyData(timePointToPlot, :)); % 转换为分贝
+% title('包含异常的数据');
+% xlabel('频率(Hz)');
+% ylabel('信号强度(dB)');
